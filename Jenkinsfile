@@ -19,7 +19,81 @@ pipeline {
                 checkout scm
             }
         }
-
+        stage('Install Dependencies for PHP Build') {
+            steps {
+                // Manually install dependencies without sudo
+                sh '''
+                    # Install GCC and Make (if not already installed)
+                    if ! command -v gcc &> /dev/null; then
+                        echo "GCC not found, downloading and installing..."
+                        curl -LO http://ftp.gnu.org/gnu/gcc/gcc-9.3.0/gcc-9.3.0.tar.gz
+                        tar -xzf gcc-9.3.0.tar.gz
+                        cd gcc-9.3.0
+                        ./contrib/download_prerequisites
+                        mkdir build
+                        cd build
+                        ../configure --prefix=$HOME/gcc
+                        make -j"$(nproc)"
+                        make install
+                        export PATH=$HOME/gcc/bin:$PATH
+                        cd ..
+                    fi
+                    
+                    # Install Make (if not already installed)
+                    if ! command -v make &> /dev/null; then
+                        echo "Make not found, downloading and installing..."
+                        curl -LO https://ftp.gnu.org/gnu/make/make-4.3.tar.gz
+                        tar -xzf make-4.3.tar.gz
+                        cd make-4.3
+                        ./configure --prefix=$HOME/make
+                        make -j"$(nproc)"
+                        make install
+                        export PATH=$HOME/make/bin:$PATH
+                        cd ..
+                    fi
+                    
+                    # Install necessary libraries like OpenSSL, Curl, and XML
+                    # Download and compile OpenSSL
+                    if ! command -v openssl &> /dev/null; then
+                        echo "OpenSSL not found, downloading and installing..."
+                        curl -LO https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+                        tar -xzf openssl-1.1.1l.tar.gz
+                        cd openssl-1.1.1l
+                        ./config --prefix=$HOME/openssl
+                        make -j"$(nproc)"
+                        make install
+                        export PATH=$HOME/openssl/bin:$PATH
+                        cd ..
+                    fi
+                    
+                    # Download and compile Curl
+                    if ! command -v curl &> /dev/null; then
+                        echo "Curl not found, downloading and installing..."
+                        curl -LO https://curl.haxx.se/download/curl-7.79.1.tar.gz
+                        tar -xzf curl-7.79.1.tar.gz
+                        cd curl-7.79.1
+                        ./configure --prefix=$HOME/curl
+                        make -j"$(nproc)"
+                        make install
+                        export PATH=$HOME/curl/bin:$PATH
+                        cd ..
+                    fi
+                    
+                    # Download and compile libxml2
+                    if ! command -v xmllint &> /dev/null; then
+                        echo "libxml2 not found, downloading and installing..."
+                        curl -LO http://xmlsoft.org/sources/libxml2-2.9.12.tar.gz
+                        tar -xzf libxml2-2.9.12.tar.gz
+                        cd libxml2-2.9.12
+                        ./configure --prefix=$HOME/libxml2
+                        make -j"$(nproc)"
+                        make install
+                        export PATH=$HOME/libxml2/bin:$PATH
+                        cd ..
+                    fi
+                '''
+            }
+        }
         stage('Install PHP and Composer') {
             steps {
                 script {
