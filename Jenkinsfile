@@ -19,7 +19,7 @@ pipeline {
             }
         }
 
-        stage('Install PHP and Composer') {
+          stage('Install PHP and Composer') {
             steps {
                 sh '''
                     # Download PHP source tarball using curl
@@ -42,7 +42,7 @@ pipeline {
                     # Verify PHP installation
                     php -v
                     
-                    # Install Composer (without sudo)
+                    # Install Composer
                     curl -sS https://getcomposer.org/installer | php -- --install-dir=$HOME --filename=composer
                     
                     # Add Composer to PATH for the current session
